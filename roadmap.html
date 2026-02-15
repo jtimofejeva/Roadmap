@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Tech Roadmap Generator</title>
+
+    <!-- CSS Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Core Engine -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7/babel.min.js" crossorigin></script>
+
+    <!-- Utilities -->
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Initialization Screen */
+        #diagnostic-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            z-index: 9999;
+        }
+
+        /* UI Styles */
+        .blue-banner {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            padding: 3.5rem 2rem;
+            color: #ffffff;
+        }
+
+        .nav-pill-container {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-pill-btn {
+            padding: 0.75rem 2.5rem;
+            border-radius: 0.75rem;
+            font-weight: 800;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-pill-btn.active {
+            background-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .nav-pill-btn.inactive {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+        .nav-pill-btn.inactive:hover {
+            background-color: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .card-main {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-label {
+            font-size: 11px;
+            font-weight: 900;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            display: block;
+            letter-spacing: 0.05em;
+        }
+
+        /* Preview Grid */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .lane-header {
+            padding: 1.5rem 1.25rem;
+            color: #ffffff;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.95rem;
+            line-height: 1.2;
+        }
+
+        .lane-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+
+        .q-header {
+            padding: 1rem;
+            background-color: #f8fafc;
+            font-weight: 900;
+            color: #334155;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.75rem 1.5rem;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .section-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Dropdown */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 240px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            margin-top: 0.5rem;
+        }
+
+        .dropdown-content::before {
+            content: '';
+            position: absolute;
+            top: -0.5rem;
+            left: 0;
+            right: 0;
+            height: 0.5rem;
+            background: transparent;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            width: 100%;
+            text-align: left;
+            padding: 1rem 1.5rem;
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            border: none;
+            background: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+            padding-left: 1.75rem;
+        }
+
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0.5cm;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .roadmap-container {
+                padding: 0 !important;
+                width: 100% !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+
+            .min-w-\[1240px\] {
+                min-width: 100% !important;
+            }
+
+            .preview-grid,
+            .section-header,
+            .lane-header {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            footer {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="diagnostic-screen">
+        <div style="padding: 40px; max-width: 500px; text-align: center;">
+            <div style="font-size: 24px; font-weight: 900; margin-bottom: 10px;">Roadmap v7.2</div>
+            <p id="diag-msg" style="color:#94a3b8;">Applying frozen design spec...</p>
+        </div>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, Fragment, useRef } = React;
+
+        const LoaderCleaner = () => {
+            useEffect(() => {
+                const s = document.getElementById('diagnostic-screen');
+                if (s) s.style.display = 'none';
+            }, []);
+            return null;
+        };
+
+        const Icon = ({ name, className = "w-4 h-4" }) => {
+            const svgMap = {
+                Calendar: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
+                LayoutGrid: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg>,
+                Zap: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="m13 2-2 10h3L11 22l2-10h-3l2-10z" /></svg>,
+                Plus: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg>,
+                Trash2: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" /></svg>,
+                Download: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>,
+                List: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>,
+                Diamond: <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2 2 12l10 10 10-10L12 2z" /></svg>,
+                FileImage: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>,
+                FileText: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /></svg>,
+                Monitor: <svg className={className} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>,
+                ArrowUp: <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z" /></svg>,
+                ArrowDown: <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M11 4h2v12l5.5-5.5 1.42 1.42L12 19.84l-7.92-7.92-1.42-1.42L11 16V4z" /></svg>
+            };
+            return svgMap[name] || <Icon name="Calendar" className={className} />;
+        };
+
+        const RoadmapGenerator = () => {
+            const [activeTab, setActiveTab] = useState('builder');
+            const [startYear, setStartYear] = useState(2026);
+            const [timelineMonths, setTimelineMonths] = useState(24);
+            const [roadmapType, setRoadmapType] = useState('technology');
+            const [selectedTemplate, setSelectedTemplate] = useState('technology');
+
+            const [swimlanes, setSwimlanes] = useState([
+                { id: 101, name: 'Core Systems & HRIS', color: '#0891b2', layer: 'technology', items: [] },
+                { id: 102, name: 'Integration & Data Platform', color: '#0d9488', layer: 'technology', items: [] },
+                { id: 103, name: 'Talent Applications', color: '#6d28d9', layer: 'technology', items: [] },
+                { id: 104, name: 'Analytics & AI', color: '#ea580c', layer: 'technology', items: [] },
+                { id: 105, name: 'Employee Experience', color: '#db2777', layer: 'technology', items: [] }
+            ]);
+
+            const [dependencies, setDependencies] = useState([]);
+            const [showDependencyModal, setShowDependencyModal] = useState(false);
+            const [newDependency, setNewDependency] = useState({ fromLaneId: '', fromItemId: '', toLaneId: '', toItemId: '' });
+
+            const [newLane, setNewLane] = useState({ name: '', color: '#0891b2', layer: 'business' });
+            const [selectedLaneId, setSelectedLaneId] = useState(null);
+            const [newItem, setNewItem] = useState({ name: '', startMonth: 0, duration: 6, type: 'project' });
+
+            const roadmapRef = useRef(null);
+            const colors = ['#0891b2', '#0d9488', '#6d28d9', '#ea580c', '#dc2626', '#2563eb', '#db2777'];
+            const templateLabels = {
+                technology: 'Technology Layer',
+                functional: 'HR Functional',
+                hybrid: 'Hybrid View'
+            };
+
+            // HELPERS
+            const getItemById = (laneId, itemId) => {
+                const lane = swimlanes.find(l => l.id === Number(laneId));
+                return lane?.items.find(i => i.id === Number(itemId));
+            };
+
+            const getLaneById = (laneId) => {
+                return swimlanes.find(l => l.id === Number(laneId));
+            };
+
+            // LOGIC
+            const addDependency = () => {
+                if (!newDependency.fromItemId || !newDependency.toItemId) return;
+                const exists = dependencies.some(dep => dep.fromItemId === Number(newDependency.fromItemId) && dep.toItemId === Number(newDependency.toItemId));
+                if (exists) return;
+
+                setDependencies([...dependencies, {
+                    id: Date.now(),
+                    fromLaneId: Number(newDependency.fromLaneId),
+                    fromItemId: Number(newDependency.fromItemId),
+                    toLaneId: Number(newDependency.toLaneId),
+                    toItemId: Number(newDependency.toItemId)
+                }]);
+                setNewDependency({ fromLaneId: '', fromItemId: '', toLaneId: '', toItemId: '' });
+                setShowDependencyModal(false);
+            };
+
+            const deleteItem = (laneId, itemId) => {
+                setSwimlanes(swimlanes.map(l => l.id === laneId ? { ...l, items: l.items.filter(item => item.id !== itemId) } : l));
+                setDependencies(dependencies.filter(dep => dep.fromItemId !== itemId && dep.toItemId !== itemId));
+            };
+
+            const loadTemplate = (type) => {
+                setRoadmapType(type);
+                setSelectedTemplate(type);
+                const tData = {
+                    technology: [
+                        { id: 101, name: 'Core Systems & HRIS', color: '#0891b2', layer: 'technology', items: [] },
+                        { id: 102, name: 'Integration & Data Platform', color: '#0d9488', layer: 'technology', items: [] },
+                        { id: 103, name: 'Talent Applications', color: '#6d28d9', layer: 'technology', items: [] },
+                        { id: 104, name: 'Analytics & AI', color: '#ea580c', layer: 'technology', items: [] },
+                        { id: 105, name: 'Employee Experience', color: '#db2777', layer: 'technology', items: [] }
+                    ],
+                    functional: [
+                        { id: 201, name: 'Talent Acquisition', color: '#0d9488', layer: 'business', items: [] },
+                        { id: 202, name: 'Learning & Dev', color: '#6d28d9', layer: 'business', items: [] },
+                        { id: 203, name: 'Total Rewards', color: '#ea580c', layer: 'business', items: [] },
+                        { id: 204, name: 'Operations', color: '#0891b2', layer: 'business', items: [] },
+                        { id: 205, name: 'Culture', color: '#db2777', layer: 'business', items: [] }
+                    ],
+                    hybrid: [
+                        { id: 301, name: 'Talent Excellence', color: '#2563eb', layer: 'business', items: [] },
+                        { id: 302, name: 'Operational Efficiency', color: '#059669', layer: 'business', items: [] },
+                        { id: 303, name: 'Employee Experience', color: '#8b5cf6', layer: 'business', items: [] },
+                        { id: 304, name: 'Platform & Integration', color: '#ea580c', layer: 'technology', items: [] },
+                        { id: 305, name: 'Analytics & AI', color: '#dc2626', layer: 'technology', items: [] }
+                    ]
+                };
+                setSwimlanes(tData[type]);
+                setDependencies([]);
+            };
+
+            const generateQuarters = () => {
+                const qs = [];
+                for (let i = 0; i < timelineMonths / 3; i++) {
+                    qs.push(`Q${(i % 4) + 1} ${startYear + Math.floor(i / 4)}`);
+                }
+                return qs;
+            };
+
+            const getLanedItems = (laneItems) => {
+                if (!laneItems.length) return { items: [], count: 1 };
+                const sorted = [...laneItems].sort((a, b) => a.startMonth - b.startMonth);
+                const lanes = [];
+                sorted.forEach(it => {
+                    let placed = false;
+                    for (let i = 0; i < lanes.length; i++) {
+                        const last = lanes[i][lanes[i].length - 1];
+                        if (it.startMonth >= (last.startMonth + (last.duration || 0.5))) { lanes[i].push(it); placed = true; break; }
+                    }
+                    if (!placed) lanes.push([it]);
+                });
+                const res = [];
+                lanes.forEach((ls, idx) => ls.forEach(i => res.push({ ...i, vSlot: idx })));
+                return { items: res, count: lanes.length };
+            };
+
+            // EXPORT
+            const exportToImage = async (format) => {
+                if (!roadmapRef.current) return;
+                const canvas = await html2canvas(roadmapRef.current, { scale: 2, backgroundColor: '#ffffff', scrollX: -window.scrollX, scrollY: -window.scrollY });
+                const link = document.createElement('a');
+                link.download = `HR_Roadmap.${format}`;
+                link.href = canvas.toDataURL(`image/${format === 'png' ? 'png' : 'jpeg'}`);
+                link.click();
+            };
+
+            const exportToPPTX = () => {
+                const pptx = new PptxGenJS();
+                pptx.layout = 'LAYOUT_WIDE';
+                const slide = pptx.addSlide();
+                const q = generateQuarters();
+                const cw = 9 / q.length;
+                slide.addText("HR Tech Strategic Roadmap", { x: 0.5, y: 0.2, fontSize: 20, bold: true, color: '1d4ed8' });
+                q.forEach((v, i) => slide.addText(v, { x: 2.5 + (i * cw), y: 0.6, w: cw, fontSize: 8, bold: true, align: 'center', fill: { color: 'f8fafc' } }));
+                let y = 1.0;
+                swimlanes.forEach(lane => {
+                    const { items, count } = getLanedItems(lane.items);
+                    slide.addShape(pptx.ShapeType.rect, { x: 0.5, y, w: 1.8, h: 0.5, fill: { color: lane.color.replace('#', '') } });
+                    slide.addText(lane.name, { x: 0.5, y, w: 1.8, h: 0.5, fontSize: 10, bold: true, color: 'FFFFFF', inset: 0.1 });
+                    items.forEach(it => {
+                        const x = 2.5 + (it.startMonth / timelineMonths) * 9;
+                        const w = (it.duration / timelineMonths) * 9;
+                        const vy = y + (it.vSlot * 0.45) + 0.1;
+                        if (it.type === 'project') {
+                            slide.addShape(pptx.ShapeType.rect, { x, y: vy, w, h: 0.35, fill: { color: lane.color.replace('#', '') }, opacity: 80 });
+                            slide.addText(it.name, { x, y: vy, w, h: 0.35, fontSize: 8, color: 'FFFFFF', align: 'center' });
+                        } else {
+                            slide.addShape(pptx.ShapeType.diamond, { x: x - 0.1, y: vy, w: 0.2, h: 0.2, fill: { color: 'EF4444' } });
+                            slide.addText(it.name, { x: x - 0.4, y: vy + 0.2, w: 0.8, h: 0.2, fontSize: 6, color: '64748b', align: 'center', bold: true });
+                        }
+                        if (roadmapType === 'hybrid') {
+                            const hasIn = dependencies.some(d => Number(d.toItemId) === Number(it.id));
+                            const hasOut = dependencies.some(d => Number(d.fromItemId) === Number(it.id));
+                            let bx = x + Math.max(w, 0.2) - 0.1;
+                            if (hasOut) { slide.addShape(pptx.ShapeType.ellipse, { x: bx, y: vy - 0.1, w: 0.12, h: 0.12, fill: { color: 'EA580C' } }); slide.addText('↓', { x: bx, y: vy - 0.1, w: 0.12, h: 0.12, fontSize: 6, color: 'FFFFFF', align: 'center' }); bx -= 0.14; }
+                            if (hasIn) { slide.addShape(pptx.ShapeType.ellipse, { x: bx, y: vy - 0.1, w: 0.12, h: 0.12, fill: { color: '3B82F6' } }); slide.addText('↑', { x: bx, y: vy - 0.1, w: 0.12, h: 0.12, fontSize: 6, color: 'FFFFFF', align: 'center' }); }
+                        }
+                    });
+                    y += Math.max(0.7, (count * 0.5));
+                });
+                pptx.writeFile({ fileName: `Roadmap_${Date.now()}.pptx` });
+            };
+
+            return (
+                <div className="min-h-screen">
+                    <LoaderCleaner />
+
+                    <header className="blue-banner no-print">
+                        <div className="max-w-7xl mx-auto flex items-center gap-6">
+                            <Icon name="Calendar" className="w-12 h-12" />
+                            <div><h1 className="text-4xl font-black tracking-tight">HR Tech Roadmap Generator</h1><p className="text-blue-100 font-medium text-lg mt-1">Create professional capability-based roadmaps in minutes</p></div>
+                        </div>
+                    </header>
+
+                    <nav className="nav-pill-container no-print shadow-sm">
+                        <div className="max-w-7xl mx-auto flex gap-6">
+                            <button onClick={() => setActiveTab('builder')} className={`nav-pill-btn ${activeTab === 'builder' ? 'active shadow-lg' : 'inactive'}`}><Icon name="LayoutGrid" /> Builder</button>
+                            <button onClick={() => setActiveTab('preview')} className={`nav-pill-btn ${activeTab === 'preview' ? 'active shadow-lg' : 'inactive'}`}><Icon name="Zap" /> Preview Roadmap</button>
+                        </div>
+                    </nav>
+
+                    <main className="max-w-7xl mx-auto p-10">
+                        {activeTab === 'builder' ? (
+                            <div className="animate-in fade-in transition-all">
+                                <section className="mb-12">
+                                    <h2 className="text-2xl font-black mb-8">Quick Start Templates</h2>
+                                    <div className="grid grid-cols-1 gap-6">
+                                        {[
+                                            { id: 'technology', title: 'Technology Layer', desc: 'Infrastructure, Integration, Applications, Analytics, UX', icon: 'LayoutGrid', color: 'blue' },
+                                            { id: 'functional', title: 'HR Functional', desc: 'Recruit, Develop, Reward, Manage, Engage', icon: 'List', color: 'green' },
+                                            { id: 'hybrid', title: 'Hybrid View', desc: 'Business Layer + Technology Layer with dependencies', icon: 'Calendar', color: 'purple' }
+                                        ].map(t => (
+                                            <button key={t.id} onClick={() => loadTemplate(t.id)} className={`flex items-center gap-8 p-10 border-2 rounded-[1rem] bg-white text-left transition-all ${selectedTemplate === t.id ? 'border-blue-500 ring-8 ring-blue-50' : 'border-slate-100 hover:border-blue-200'} group relative`}>
+                                                <div className={`w-14 h-14 bg-${t.color}-50 text-${t.color}-600 rounded-xl flex items-center justify-center shrink-0`}><Icon name={t.icon} className="w-7 h-7" /></div>
+                                                <div>
+                                                    <div className="text-xl font-black">{t.title}</div>
+                                                    <p className="text-slate-400 text-sm mt-1 font-medium">{t.desc}</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                <section className="card-main">
+                                    <h2 className="text-xl font-black mb-8 border-b pb-4">Timeline Configuration</h2>
+                                    <div className="flex gap-12"><div className="flex flex-col gap-2"><span className="input-label">Start Year</span><select value={startYear} onChange={e => setStartYear(Number(e.target.value))} className="p-4 border rounded-xl font-bold bg-slate-50 w-32">{[2024, 2025, 2026, 2027, 2028].map(y => <option key={y} value={y}>{y}</option>)}</select></div><div className="flex flex-col gap-2"><span className="input-label">Duration</span><select value={timelineMonths} onChange={e => setTimelineMonths(Number(e.target.value))} className="p-4 border rounded-xl font-bold bg-slate-50 w-48"><option value={12}>12 Months</option><option value={24}>24 Months</option><option value={36}>36 Months</option></select></div><div className="flex items-end pb-4 font-black text-slate-300 uppercase tracking-widest text-xs">Total Grid: {timelineMonths / 3} Quarters</div></div>
+                                </section>
+
+                                <section className="card-main border-blue-100 bg-blue-50/20">
+                                    <h2 className="text-xl font-black mb-8">Add Capability Swimlane</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-end">
+                                        <div className={roadmapType === 'hybrid' ? 'md:col-span-1' : 'md:col-span-2'}><span className="input-label">Capability Name</span><input value={newLane.name} onChange={e => setNewLane({ ...newLane, name: e.target.value })} placeholder="e.g. Talent Acquisition" className="w-full p-4 border rounded-xl font-bold" /></div>
+                                        {roadmapType === 'hybrid' && (<div><span className="input-label">Layer</span><select value={newLane.layer} onChange={e => setNewLane({ ...newLane, layer: e.target.value })} className="w-full p-4 border rounded-xl font-bold bg-white"><option value="business">Business</option><option value="technology">Technology</option></select></div>)}
+                                        <div><span className="input-label">Branding Color</span><div className="flex gap-2 p-2 bg-white rounded-xl border">{colors.map(c => (<button key={c} onClick={() => setNewLane({ ...newLane, color: c })} className={`w-7 h-7 rounded-lg ${newLane.color === c ? 'scale-125 ring-2 ring-slate-400' : 'opacity-30'}`} style={{ backgroundColor: c }} />))}</div></div>
+                                        <button onClick={() => { if (newLane.name) { setSwimlanes([...swimlanes, { ...newLane, id: Date.now(), items: [] }]); setNewLane({ name: '', color: '#0891b2', layer: 'business' }); } }} className="bg-blue-600 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 h-[3.75rem] shadow-xl shadow-blue-100"><Icon name="Plus" /> Add Lane</button>
+                                    </div>
+                                </section>
+
+                                {roadmapType === 'hybrid' && (
+                                    <section className="card-main border-purple-100 bg-purple-50/10">
+                                        <div className="flex justify-between items-center mb-8"><h2 className="text-xl font-black text-purple-900 leading-none">Relationship Dependencies</h2><button onClick={() => setShowDependencyModal(true)} className="bg-purple-600 text-white px-8 py-3 rounded-xl font-black text-sm flex items-center gap-2 hover:bg-purple-700 shadow-xl shadow-purple-100"><Icon name="Plus" /> New Link</button></div>
+                                        <div className="space-y-4">
+                                            {dependencies.length === 0 ? <p className="text-slate-400 text-sm font-medium italic p-4 bg-white/50 border border-dashed rounded-xl">No active dependencies defined between tech and business layers.</p> :
+                                                dependencies.map(dep => {
+                                                    const fI = getItemById(dep.fromLaneId, dep.fromItemId);
+                                                    const tI = getItemById(dep.toLaneId, dep.toItemId);
+                                                    return (
+                                                        <div key={dep.id} className="flex items-center justify-between bg-white p-5 rounded-2xl border border-purple-100 shadow-sm animate-in slide-in-from-left-4">
+                                                            <div className="flex items-center gap-4 text-sm font-extrabold tracking-tight">
+                                                                <span className="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-lg">{fI?.name}</span>
+                                                                <span className="text-purple-400 text-xl">→</span>
+                                                                <span className="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-lg">{tI?.name}</span>
+                                                            </div>
+                                                            <button onClick={() => setDependencies(dependencies.filter(d => d.id !== dep.id))} className="text-slate-300 hover:text-red-500 transition-colors"><Icon name="Trash2" /></button>
+                                                        </div>
+                                                    );
+                                                })
+                                            }
+                                        </div>
+                                    </section>
+                                )}
+
+                                <section className="mb-12">
+                                    <h2 className="text-2xl font-black mb-8">Board Roadmap Items</h2>
+                                    <div className="space-y-6">
+                                        {swimlanes.map(l => (
+                                            <div key={l.id} className="bg-white border rounded-3xl overflow-hidden animate-in slide-in-from-bottom-4 transition-all hover:shadow-xl">
+                                                <div className="p-6 flex justify-between items-center border-b border-slate-50">
+                                                    <div className="flex items-center gap-5">
+                                                        <div className="w-5 h-5 rounded-xl shadow-inner" style={{ backgroundColor: l.color }} />
+                                                        <span className="font-black text-slate-800 text-xl">{l.name}</span>
+                                                        {roadmapType === 'hybrid' && <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-widest">{l.layer} Layer</span>}
+                                                    </div>
+                                                    <div className="flex gap-4">
+                                                        <button onClick={() => setSelectedLaneId(l.id)} className="bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-black">Add Project</button>
+                                                        <button onClick={() => setSwimlanes(swimlanes.filter(x => x.id !== l.id))} className="text-slate-300 hover:text-red-500 transition-colors"><Icon name="Trash2" className="w-5 h-5" /></button>
+                                                    </div>
+                                                </div>
+                                                <div className="p-6 bg-slate-50/30">
+                                                    {l.items.length === 0 ? <p className="text-slate-400 font-bold text-center py-6 text-sm">No initiatives in this lane yet &mdash; click the black button to add.</p> : (
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                            {l.items.map(it => (
+                                                                <div key={it.id} className="bg-white p-5 rounded-2xl border border-slate-100 flex items-center justify-between shadow-sm group">
+                                                                    <div>
+                                                                        <div className="font-black text-slate-800 mb-1">{it.name}</div>
+                                                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Start: M{it.startMonth} &middot; Duration: {it.duration}m</div>
+                                                                    </div>
+                                                                    <button onClick={() => deleteItem(l.id, it.id)} className="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-all p-2"><Icon name="Trash2" className="w-4 h-4" /></button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {selectedLaneId && (
+                                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[5000] flex items-center justify-center p-6" onClick={() => setSelectedLaneId(null)}>
+                                        <div className="bg-white p-12 rounded-[3rem] w-full max-w-xl shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                                            <h2 className="text-3xl font-black mb-10 text-slate-900">Add New Initiative</h2>
+                                            <div className="space-y-8">
+                                                <div><span className="input-label">Project or Milestone Title</span><input value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} className="w-full p-5 border-2 border-slate-100 rounded-2xl font-bold bg-slate-50 focus:border-blue-500 outline-none" autoFocus /></div>
+                                                <div className={`grid gap-8 ${newItem.type === 'project' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                                                    <div><span className="input-label">{newItem.type === 'project' ? 'Start Month (0-36)' : 'Month (0-36)'}</span><input type="number" value={newItem.startMonth} onChange={e => setNewItem({ ...newItem, startMonth: Number(e.target.value) })} className="w-full p-5 border-2 border-slate-100 rounded-2xl font-bold bg-slate-50" /></div>
+                                                    {newItem.type === 'project' && (
+                                                        <div><span className="input-label">Length (Months)</span><input type="number" value={newItem.duration} onChange={e => setNewItem({ ...newItem, duration: Number(e.target.value) })} className="w-full p-5 border-2 border-slate-100 rounded-2xl font-bold bg-slate-50" /></div>
+                                                    )}
+                                                </div>
+                                                <div className="flex bg-slate-100 p-2 rounded-2xl gap-2">
+                                                    <button onClick={() => setNewItem({ ...newItem, type: 'project' })} className={`flex-1 py-4 rounded-xl font-black transition-all ${newItem.type === 'project' ? 'bg-white shadow-lg text-blue-600' : 'text-slate-400'}`}>Project Block</button>
+                                                    <button onClick={() => setNewItem({ ...newItem, type: 'milestone', duration: 0 })} className={`flex-1 py-4 rounded-xl font-black transition-all ${newItem.type === 'milestone' ? 'bg-white shadow-lg text-blue-600' : 'text-slate-400'}`}>Single Milestone</button>
+                                                </div>
+                                                <button onClick={() => { if (newItem.name) { setSwimlanes(swimlanes.map(l => l.id === selectedLaneId ? { ...l, items: [...l.items, { ...newItem, id: Date.now() }] } : l)); setSelectedLaneId(null); setNewItem({ name: '', startMonth: 0, duration: 6, type: 'project' }); } }} className="w-full bg-blue-600 text-white font-black py-6 rounded-[1.5rem] text-xl hover:bg-blue-700 shadow-2xl shadow-blue-100 transition-transform active:scale-95">Add to Roadmap</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {showDependencyModal && (
+                                    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[6000] flex items-center justify-center p-6" onClick={() => setShowDependencyModal(false)}>
+                                        <div className="bg-white p-12 rounded-[3.5rem] w-full max-w-2xl shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                                            <h2 className="text-3xl font-black mb-12 text-slate-900">Define Strategic Link</h2>
+                                            <div className="space-y-10">
+                                                <div><span className="input-label">Technology Enabler (Driver)</span><select value={newDependency.fromItemId} onChange={(e) => { const itId = Number(e.target.value); const laneId = swimlanes.find(l => l.items.some(it => it.id === itId))?.id; setNewDependency({ ...newDependency, fromLaneId: Number(laneId), fromItemId: itId }); }} className="w-full p-6 border-2 border-slate-100 rounded-[1.5rem] font-black bg-slate-50"><option value="">Select source project...</option>{swimlanes.map(l => l.items.map(it => <option key={it.id} value={it.id}>{l.name}: {it.name}</option>))}</select></div>
+                                                <div className="text-center font-black text-purple-400 uppercase tracking-[0.4em] text-xs py-4 flex items-center justify-center gap-8"><div className="h-px bg-purple-100 flex-1"></div>enables ↓<div className="h-px bg-purple-100 flex-1"></div></div>
+                                                <div><span className="input-label">Business Outcome (Recipient)</span><select value={newDependency.toItemId} onChange={(e) => { const itId = Number(e.target.value); const laneId = swimlanes.find(l => l.items.some(it => it.id === itId))?.id; setNewDependency({ ...newDependency, toLaneId: Number(laneId), toItemId: itId }); }} className="w-full p-6 border-2 border-slate-100 rounded-[1.5rem] font-black bg-slate-50"><option value="">Select destination project...</option>{swimlanes.map(l => l.items.map(it => <option key={it.id} value={it.id}>{l.name}: {it.name}</option>))}</select></div>
+                                                <div className="flex gap-6 mt-6"><button onClick={() => setShowDependencyModal(false)} className="flex-1 py-6 rounded-[1.5rem] font-black text-slate-400 hover:bg-slate-50">Cancel</button><button onClick={addDependency} className="flex-1 bg-purple-600 text-white font-black py-6 rounded-[1.5rem] text-xl shadow-2xl shadow-purple-100 hover:bg-purple-700 transition-transform active:scale-95">Establish Relationship</button></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            /* PREVIEW MODE */
+                            <div className="animate-in fade-in transition-all">
+                                <header className="flex justify-between items-end mb-16 no-print">
+                                    <div><h2 className="text-4xl font-black tracking-tight text-slate-900">Roadmap Preview</h2><p className="text-slate-400 font-bold text-xl mt-3 tracking-tight">Your custom {selectedTemplate} roadmap</p></div>
+                                    <div className="dropdown">
+                                        <button className="bg-blue-600 text-white px-10 py-5 rounded-2xl font-black flex items-center gap-3 shadow-2xl shadow-blue-100 hover:bg-blue-700 transition-all hover:-translate-y-1">
+                                            <Icon name="Download" className="w-5 h-5" /> Export <Icon name="Zap" className="w-3 h-3 opacity-30" />
+                                        </button>
+                                        <div className="dropdown-content">
+                                            <button className="dropdown-item" onClick={() => exportToImage('png')}><div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><Icon name="FileImage" /></div> PNG</button>
+                                            <button className="dropdown-item" onClick={() => window.print()}><div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><Icon name="FileText" /></div> PDF</button>
+                                            <button className="dropdown-item" onClick={exportToPPTX}><div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center"><Icon name="Monitor" /></div> PPT</button>
+                                        </div>
+                                    </div>
+                                </header>
+
+                                <div ref={roadmapRef} className="roadmap-container bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl p-4 sm:p-14">
+                                    <div className="min-w-[1240px]">
+                                        <div className="preview-grid bg-slate-50 border-b -mx-14 px-14">
+                                            <div className="flex items-center px-6"><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Capability Pool</span></div>
+                                            <div className="flex">{generateQuarters().map((q, i) => (<div key={i} className="q-header flex-1 font-black"><div>{q.split(' ')[1]}</div><div className="text-sm mt-1">{q.split(' ')[0]}</div></div>))}</div>
+                                        </div>
+
+                                        {['business', 'technology'].map(layer => {
+                                            const lanes = swimlanes.filter(l => l.layer === layer);
+                                            if (!lanes.length) return null;
+                                            return (
+                                                <Fragment key={layer}>
+                                                    <div className="section-header -mx-14 px-14 border-b border-slate-100">
+                                                        <div className="section-dot" style={{ backgroundColor: layer === 'business' ? '#2563eb' : '#ea580c' }} />
+                                                        {layer === 'business' ? 'BUSINESS CAPABILITIES' : 'TECHNOLOGY ENABLERS'}
+                                                    </div>
+                                                    {lanes.map(l => {
+                                                        const { items, count } = getLanedItems(l.items);
+                                                        return (
+                                                            <div key={l.id} className="preview-grid -mx-14 px-14 border-b border-slate-50 group/lane">
+                                                                <div className="lane-header whitespace-normal" style={{ backgroundColor: l.color }}>
+                                                                    <div className="lane-dot" />
+                                                                    <span className="font-black text-sm tracking-tight leading-[1.3]">{l.name}</span>
+                                                                </div>
+                                                                <div className="relative" style={{ height: `${Math.max(count * 65, 120)}px` }}>
+                                                                    <div className="absolute inset-0 flex">{generateQuarters().map((_, i) => <div key={i} className="timeline-cell" />)}</div>
+                                                                    {items.map(it => {
+                                                                        const left = (it.startMonth / timelineMonths) * 100;
+                                                                        const width = (it.duration / timelineMonths) * 100;
+                                                                        const vPos = 25 + (it.vSlot * 60);
+
+                                                                        // DEPENDENCY DETECTION
+                                                                        const hasIn = roadmapType === 'hybrid' && dependencies.some(d => Number(d.toItemId) === Number(it.id));
+                                                                        const hasOut = roadmapType === 'hybrid' && dependencies.some(d => Number(d.fromItemId) === Number(it.id));
+
+                                                                        return (
+                                                                            <div key={it.id} className="absolute flex items-center" style={{ left: `${left}%`, width: it.type === 'project' ? `${width}%` : 'auto', top: `${vPos}px`, zIndex: 10 + it.vSlot }}>
+                                                                                {it.type === 'project' ? (
+                                                                                    <div className="h-11 w-full rounded-[0.85rem] flex items-center px-5 text-[11px] text-white font-black truncate shadow-xl relative transition-transform hover:scale-[1.02]" style={{ backgroundColor: l.color, border: '2px solid rgba(255,255,255,0.25)' }}>
+                                                                                        {it.name}
+                                                                                        <div className="absolute -top-6 right-1 flex gap-1.5 no-print">
+                                                                                            {hasIn && <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-lg animate-in fade-in zoom-in" title="Dependent on enabler"><Icon name="ArrowUp" className="w-3 h-3" /></div>}
+                                                                                            {hasOut && <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-lg animate-in fade-in zoom-in" title="Enables strategic outcome"><Icon name="ArrowDown" className="w-3 h-3" /></div>}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div className="flex flex-col items-center -ml-5 relative group/ms cursor-default">
+                                                                                        <div className="w-10 h-10 text-red-500 drop-shadow-2xl transition-transform hover:scale-125"><Icon name="Diamond" className="w-full h-full" /></div>
+                                                                                        <div className="mt-1 text-[9px] font-black text-slate-600 text-center leading-tight max-w-[80px] break-words">{it.name}</div>
+                                                                                        <div className="absolute top-0 -right-2 flex gap-1 no-print">
+                                                                                            {hasIn && <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-lg animate-in zoom-in"><Icon name="ArrowUp" className="w-3 h-3" /></div>}
+                                                                                            {hasOut && <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-lg animate-in zoom-in"><Icon name="ArrowDown" className="w-3 h-3" /></div>}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </Fragment>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {selectedTemplate === 'hybrid' && dependencies.length > 0 && (
+                                        <div className="p-12 border-t border-slate-100 bg-slate-50/10 -mx-14 px-28">
+                                            <div className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-6">Strategic Links & Dependencies</div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
+                                                {dependencies.map(dep => {
+                                                    const fI = getItemById(dep.fromLaneId, dep.fromItemId);
+                                                    const tI = getItemById(dep.toLaneId, dep.toItemId);
+                                                    return (
+                                                        <div key={dep.id} className="flex items-center gap-3 text-[11px] font-bold text-slate-600">
+                                                            <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm"><Icon name="ArrowDown" className="w-3 h-3" /></div>
+                                                            <span className="truncate">{fI?.name}</span>
+                                                            <span className="text-slate-300 mx-1">→</span>
+                                                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm"><Icon name="ArrowUp" className="w-3 h-3" /></div>
+                                                            <span className="truncate">{tI?.name}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <footer className="p-12 border-t border-slate-100 flex items-center gap-16 bg-slate-50/20 -mx-14 px-28">
+                                        <div className="flex items-center gap-4"><div className="w-12 h-2.5 bg-blue-600 rounded-full shadow-sm" /><span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Project</span></div>
+                                        <div className="flex items-center gap-4"><div className="text-red-500 w-6 h-6"><Icon name="Diamond" /></div><span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Milestone</span></div>
+                                        {1 === 1 && (
+                                            <Fragment>
+                                                <div className="flex items-center gap-4"><Icon name="Calendar" className="text-slate-400 w-5 h-5" /><span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{timelineMonths} months</span></div>
+                                                <div className="flex items-center gap-4"><div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black border border-blue-100 tracking-wider font-bold">{templateLabels[selectedTemplate]}</div></div>
+                                            </Fragment>
+                                        )}
+                                        <div className="ml-auto text-slate-300 opacity-20"><Icon name="Zap" /></div>
+                                    </footer>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    <footer className="p-20 text-center no-print border-t border-slate-50 bg-white"><div className="flex flex-col items-center gap-4"><span className="text-slate-700 font-black text-xl tracking-tight leading-none italic uppercase">Built by Enterprise Architects, for Enterprise Architects</span><span className="text-slate-400 font-bold text-sm tracking-widest">V2.0 &copy; 2026</span></div></footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RoadmapGenerator />);
+    </script>
+</body>
+
+</html>
